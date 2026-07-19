@@ -2,7 +2,8 @@
 import Slider from '@/components/Slider.vue';
 import type { SliderItem } from '@/types/slider/SliderItem';
 import { useCalculationsContext } from '@/context/calculationsContext.ts';
-import { ref, watch,defineEmits } from 'vue';
+import { useUserStore } from '@/stores/userStore.ts';
+import { ref, watch } from 'vue';
 
 /**
  * ref() tworzy reaktywny stan Vue. Najlatwiej porownac to do useState w React:
@@ -53,6 +54,12 @@ const itemsList = ref<SliderItem[]>([
 const { updateUserMetrics } = useCalculationsContext();
 
 /**
+ * To jest ta sama instancja store, ktora czyta HomePage.
+ * Zapis w tym komponencie bedzie od razu widoczny w kazdym innym komponencie uzywajacym useUserStore().
+ */
+const userStore = useUserStore();
+
+/**
  * Funkcja pomocnicza wyciaga z itemsList konkretna wartosc po nazwie.
  * Zwracamy fallback, bo TypeScript przy noUncheckedIndexedAccess slusznie
  * przypomina, ze szukany element moze nie istniec.
@@ -71,29 +78,17 @@ function handleSliderValueChanged(id: number, value: number): void {
   itemsList.value = itemsList.value.map((item) => (item.id === id ? { ...item, value } : item));
 }
 
-let userName = "";
-const emit = defineEmits<{
-  userNameChanged: [id: number, value: string];
-}>();
-
-function handleUserNameInput(event: Event): void {
-  const input = event.target as HTMLInputElement;
-
-  emit('userNameChanged', 0, input.value);
-  console.log(`user name is: ${input.value}`);
-}
-
 /**
  * Watcher jest odpowiednikiem reakcji na zmiane stanu.
- * W React podobna rola nalezalaby do useEffect(() => { ... }, [itemsList]).
+ * W React podobna rola nalezalaby do useEffect(() => { ... }, [itemsList, userName]).
  * immediate: true uruchamia log od razu po starcie komponentu, a potem po
- * kazdej zmianie suwaka.
+ * kazdej zmianie suwaka albo nazwy uzytkownika w Pinia store.
  */
 watch(
-  itemsList,
+  [itemsList, () => userStore.userName],
   () => {
     updateUserMetrics({
-      name:userName,
+      name: userStore.userName,
       age: getSliderValue('age', 30),
       height: getSliderValue('height', 180),
       weight: getSliderValue('weight', 80),
@@ -111,7 +106,8 @@ watch(
   <h1>Profile page</h1>
   <p>set up your parameters</p>
   <div class="sliders-container">
-    <input class="user-name" placeholder="enter your name" type="text" v-model="userName" @input="handleUserNameInput"/>
+    <!-- v-model zapisuje tekst bezposrednio do Pinia state: userStore.userName. -->
+    <input class="user-name" placeholder="enter your name" type="text" v-model="userStore.userName"/>
     <Slider
       v-for="item in itemsList"
       :key="item.id"
