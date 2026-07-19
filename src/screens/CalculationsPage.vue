@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import Calculations from "@/utils/calculations/Calculations.ts";
 import CalculationCard from "@/components/CalculationCard.vue";
+import { useCalculationsContext } from "@/context/calculationsContext.ts";
 
-
-const calculationsList = new Calculations();
-
-const list = calculationsList.getResultsList();
-
+/**
+ * CalculationsPage jest teraz konsumentem wspolnego kontekstu.
+ * Nie tworzymy tutaj new Calculations(), bo to daloby osobny, niezalezny stan.
+ * Bierzemy resultsList z providera, ktory jest aktualizowany przez ProfilePage.
+ */
+const { resultsList } = useCalculationsContext();
 
 </script>
 
@@ -15,7 +16,7 @@ const list = calculationsList.getResultsList();
   <p>this is home calculations page - user calculations result cards list</p>
   <div class="calculations-list">
 
-    <CalculationCard v-for="item in list" :card-item="item"/>
+    <CalculationCard v-for="item in resultsList" :key="item.title" :card-item="item"/>
   </div>
 
 </template>

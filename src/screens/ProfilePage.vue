@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import Slider from '@/components/Slider.vue';
 import type { SliderItem } from '@/types/slider/SliderItem';
-import Calculations from '@/utils/calculations/Calculations';
-import { ref, watch } from 'vue';
+import { useCalculationsContext } from '@/context/calculationsContext.ts';
+import { ref, watch,defineEmits } from 'vue';
 
 /**
  * ref() tworzy reaktywny stan Vue. Najlatwiej porownac to do useState w React:
@@ -46,13 +46,11 @@ const itemsList = ref<SliderItem[]>([
 ]);
 
 /**
- * Instancja klasy Calculations zyje obok stanu komponentu.
- * W Flutterze podobna logika moglaby powstac w initState(), a potem byc
- * aktualizowana po zmianie slidera. W <script setup> kod wykonuje sie przy
- * tworzeniu komponentu, wiec to dobre miejsce na utworzenie obiektu.
+ * Pobieramy wspolny kontekst utworzony w App.vue.
+ * ProfilePage nie tworzy juz wlasnej instancji Calculations, bo wtedy wyniki
+ * zylby tylko lokalnie w tej podstronie i CalculationsPage ich nie zobaczy.
  */
-
-const calculations = new Calculations();
+const { updateUserMetrics } = useCalculationsContext();
 
 /**
  * Funkcja pomocnicza wyciaga z itemsList konkretna wartosc po nazwie.
@@ -73,6 +71,18 @@ function handleSliderValueChanged(id: number, value: number): void {
   itemsList.value = itemsList.value.map((item) => (item.id === id ? { ...item, value } : item));
 }
 
+let userName = "";
+const emit = defineEmits<{
+  userNameChanged: [id: number, value: string];
+}>();
+
+function handleUserNameInput(event: Event): void {
+  const input = event.target as HTMLInputElement;
+
+  emit('userNameChanged', 0, input.value);
+  console.log(`user name is: ${input.value}`);
+}
+
 /**
  * Watcher jest odpowiednikiem reakcji na zmiane stanu.
  * W React podobna rola nalezalaby do useEffect(() => { ... }, [itemsList]).
@@ -82,19 +92,16 @@ function handleSliderValueChanged(id: number, value: number): void {
 watch(
   itemsList,
   () => {
-    calculations.updateUserData({
-      name:"Rafi",
+    updateUserMetrics({
+      name:userName,
       age: getSliderValue('age', 30),
       height: getSliderValue('height', 180),
       weight: getSliderValue('weight', 80),
       neck:getSliderValue('neck', 80),
       hips:getSliderValue('hips', 80),
       gender:true,
-      activity: getSliderValue('activityFactor', 1.2),
+      activity: getSliderValue('activity factor', 1.2),
     });
-
-    calculations.getResults();
-
   },
   { immediate: true },
 );
@@ -104,6 +111,7 @@ watch(
   <h1>Profile page</h1>
   <p>set up your parameters</p>
   <div class="sliders-container">
+    <input class="user-name" placeholder="enter your name" type="text" v-model="userName" @input="handleUserNameInput"/>
     <Slider
       v-for="item in itemsList"
       :key="item.id"
@@ -119,5 +127,22 @@ watch(
   flex-direction: column;
   gap: 10px;
   margin: 1rem 0;
+}
+
+.user-name{
+  max-width: 400px;
+  background-color: #212121;
+  border: none;
+  color: #E0F7FA;
+  padding: 16px 6px;
+  border-bottom: 1px solid #474747;
+  margin:16px 0;
+
+}
+.user-name:focus{
+  border: 1px solid #4e8181;
+  border-radius: 8px;
+  background-color: transparent;
+  caret: aqua;
 }
 </style>
