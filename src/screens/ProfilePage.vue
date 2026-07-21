@@ -6,6 +6,12 @@ import { useUserStore } from '@/stores/userStore.ts';
 import { ref, watch } from 'vue';
 
 /**
+ * To jest ta sama instancja store, ktora czyta HomePage.
+ * Zapis w tym komponencie bedzie od razu widoczny w kazdym innym komponencie uzywajacym useUserStore().
+ */
+const userStore = useUserStore();
+
+/**
  * ref() tworzy reaktywny stan Vue. Najlatwiej porownac to do useState w React:
  * itemsList przechowuje aktualne wartosci suwakow, a zmiana itemsList.value
  * powoduje odswiezenie miejsc w template, ktore z tego stanu korzystaja.
@@ -16,7 +22,7 @@ const itemsList = ref<SliderItem[]>([
     name: 'age',
     min: 1,
     max: 100,
-    value: 30,
+    value:userStore.userAge,
     unit: 'years',
   },
   {
@@ -53,11 +59,7 @@ const itemsList = ref<SliderItem[]>([
  */
 const { updateUserMetrics } = useCalculationsContext();
 
-/**
- * To jest ta sama instancja store, ktora czyta HomePage.
- * Zapis w tym komponencie bedzie od razu widoczny w kazdym innym komponencie uzywajacym useUserStore().
- */
-const userStore = useUserStore();
+
 
 /**
  * Funkcja pomocnicza wyciaga z itemsList konkretna wartosc po nazwie.
@@ -76,6 +78,7 @@ function getSliderValue(sliderName: string, fallback: number): number {
  */
 function handleSliderValueChanged(id: number, value: number): void {
   itemsList.value = itemsList.value.map((item) => (item.id === id ? { ...item, value } : item));
+  userStore.userAge = value;
 }
 
 /**
@@ -89,7 +92,8 @@ watch(
   () => {
     updateUserMetrics({
       name: userStore.userName,
-      age: getSliderValue('age', 30),
+      // age: getSliderValue('age', 30),
+      age: userStore.userAge,
       height: getSliderValue('height', 180),
       weight: getSliderValue('weight', 80),
       neck:getSliderValue('neck', 80),

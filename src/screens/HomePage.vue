@@ -10,6 +10,7 @@ const userStore = useUserStore();
 
 <template>
   <h1>Hello {{ userStore.userName }}</h1>
+  <h1>User age {{ userStore.userAge }}</h1>
   <p>this is home page - introduction to fitcalc web app</p>
 </template>
 

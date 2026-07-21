@@ -10,6 +10,7 @@ export const useUserStore = defineStore('user', {
    * Pinia robi je reaktywne, wiec zmiana userName odswieza komponenty, ktore go czytaja.
    */
   state: () => ({
-    userName: '',
+    userName: 'Rafi',
+    userAge:30
   }),
 });
